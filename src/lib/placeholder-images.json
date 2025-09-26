@@ -1,3 +1,10 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "login-bg",
+      "description": "A field with cattle in the background",
+      "imageUrl": "https://images.unsplash.com/photo-1646248411227-741fbdebf11f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjYXR0bGUlMjBmaWVsZHxlbnwwfHx8fDE3NTg5MTUxNjR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cattle field"
+    }
+  ]
 }
