@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { identifyCattleBreed } from '@/ai/flows/identify-cattle-breed';
-import { Upload, Camera, Loader2, CheckCircle, AlertCircle, RefreshCw, Badge } from 'lucide-react';
+import { Upload, Camera, Loader2, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type Step = 'UPLOAD' | 'ANALYZING' | 'RESULT' | 'CONFIRM' | 'SYNCING' | 'ERROR';
@@ -29,6 +28,22 @@ export function CattleIdentifier() {
     }
   }, [router]);
 
+  // New client-side API call
+  async function identifyCattleBreedClient(photoDataUri: string) {
+    const res = await fetch('https://bdp.youknowme3299.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ photoDataUri }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to identify breed');
+    }
+
+    return res.json(); // { breed: string }
+  }
+
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -38,19 +53,19 @@ export function CattleIdentifier() {
         setImageUrl(dataUri);
         setStep('ANALYZING');
         try {
-          const result = await identifyCattleBreed({ photoDataUri: dataUri });
+          const result = await identifyCattleBreedClient(dataUri);
           setBreed(result.breed);
           setStep('RESULT');
-        } catch (err) {
+        } catch (err: any) {
           console.error(err);
-          setError('Could not identify the breed. The AI model may be unavailable or the image may be unsuitable. Please try another image.');
+          setError('Could not identify the breed. Please try again.');
           setStep('ERROR');
         }
       };
       reader.onerror = () => {
         setError('Failed to read the image file.');
         setStep('ERROR');
-      }
+      };
       reader.readAsDataURL(file);
     }
   };
@@ -72,16 +87,12 @@ export function CattleIdentifier() {
 
   useEffect(() => {
     if (step === 'RESULT') {
-      const timer = setTimeout(() => {
-        setStep('CONFIRM');
-      }, 2000);
+      const timer = setTimeout(() => setStep('CONFIRM'), 2000);
       return () => clearTimeout(timer);
     }
   }, [step]);
-  
-  if (!isClient) {
-    return null; // or a loading skeleton
-  }
+
+  if (!isClient) return null;
 
   const renderContent = () => {
     switch (step) {
@@ -118,26 +129,24 @@ export function CattleIdentifier() {
             )}
           </div>
         );
-      
+
       case 'RESULT':
       case 'CONFIRM':
         return (
           <div className="text-center flex flex-col items-center gap-4">
-             {imageUrl && (
+            {imageUrl && (
               <div className="mb-4 w-full max-w-sm rounded-lg overflow-hidden shadow-lg">
                 <Image src={imageUrl} alt="Identified Cattle" width={400} height={300} className="object-cover w-full h-auto" />
               </div>
             )}
             <CheckCircle className="h-12 w-12 text-green-600" />
             <h2 className="text-2xl font-semibold">Breed Identified</h2>
-            <p className="text-xl text-accent-foreground bg-accent px-4 py-2 rounded-md font-bold">
-              {breed}
-            </p>
+            <p className="text-xl text-accent-foreground bg-accent px-4 py-2 rounded-md font-bold">{breed}</p>
             {step === 'CONFIRM' && (
               <div className="mt-6 flex flex-col items-center gap-4 animate-fade-in">
-                 <p className="text-lg">Is this correct?</p>
+                <p className="text-lg">Is this correct?</p>
                 <Button size="lg" onClick={handleConfirm} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                    Confirm & Sync
+                  Confirm & Sync
                 </Button>
               </div>
             )}
@@ -152,22 +161,22 @@ export function CattleIdentifier() {
             <p className="text-muted-foreground">Your data is being saved. Please wait.</p>
           </div>
         );
-      
+
       case 'ERROR':
         return (
-            <div className="text-center flex flex-col items-center gap-4 w-full">
-                <AlertCircle className="h-12 w-12 text-destructive" />
-                <h2 className="text-xl font-semibold text-destructive">Identification Failed</h2>
-                <Alert variant="destructive" className="max-w-md">
-                    <AlertTitle>An Error Occurred</AlertTitle>
-                    <AlertDescription>{error}</AlertDescription>
-                </Alert>
-                <Button onClick={handleReset} variant="outline" size="lg">
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Try Again
-                </Button>
-            </div>
-        )
+          <div className="text-center flex flex-col items-center gap-4 w-full">
+            <AlertCircle className="h-12 w-12 text-destructive" />
+            <h2 className="text-xl font-semibold text-destructive">Identification Failed</h2>
+            <Alert variant="destructive" className="max-w-md">
+              <AlertTitle>An Error Occurred</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+            <Button onClick={handleReset} variant="outline" size="lg">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Try Again
+            </Button>
+          </div>
+        );
     }
   };
 
@@ -179,3 +188,4 @@ export function CattleIdentifier() {
     </Card>
   );
 }
+
