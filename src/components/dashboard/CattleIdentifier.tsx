@@ -30,7 +30,7 @@ export function CattleIdentifier() {
 
   // New client-side API call
   async function identifyCattleBreedClient(photoDataUri: string) {
-    const res = await fetch('https://bdp.youknowme3299.workers.dev', {
+    const res = await fetch('https://a.kimostream.eu.org', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ photoDataUri }),
