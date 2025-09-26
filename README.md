@@ -1,5 +1,4 @@
-# Firebase Studio
+# Cattle And Buffalo (SIH)
 
-This is a NextJS starter in Firebase Studio.
-
+This is a web app in NextJS .
 To get started, take a look at src/app/page.tsx.
